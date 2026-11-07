@@ -70,16 +70,20 @@ runs:
           rm -Rf $TMP_DL
         fi
 
+    
     - name: Get SDKs
       shell: bash
       run: |
-        if [[ "$(ls ${{ inputs.theos-dir }}/sdks)" ]]; then
+        SDK_DIR="${{ inputs.theos-dir }}/sdks"
+
+        if [[ -n "$(ls -A "$SDK_DIR" 2>/dev/null)" ]]; then
           echo "Theos SDKs already cached, skipping..."
         else
-          cd ${{ inputs.theos-dir }}/sdks
-          wget --no-verbose ${{ inputs.theos-sdks }}/archive/${{ inputs.theos-sdks-branch }}.zip
-          TMP=$(mktemp -d)
-          unzip -q ${{ inputs.theos-sdks-branch }}.zip -d $TMP
-          mv $TMP/*-${{ inputs.theos-sdks-branch }}/*.sdk $THEOS/sdks
-          rm -r ${{ inputs.theos-sdks-branch }}.zip $TMP
+          rm -rf "$SDK_DIR"
+          git clone --depth 1 \
+            --branch "${{ inputs.theos-sdks-branch }}" \
+            "${{ inputs.theos-sdks }}" \
+            "$SDK_DIR"
+          echo "Theos SDKs successfully downloaded."
         fi
+
